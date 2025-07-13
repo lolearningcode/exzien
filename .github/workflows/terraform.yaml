@@ -1,0 +1,53 @@
+name: Terraform CI with Exzien Drift Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Validate
+      run: terraform validate
+
+    - name: Terraform Plan
+      run: terraform plan
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    - name: Run Exzien Drift Check
+      run: |
+        response=$(curl -s -w "%{http_code}" \
+          -X POST https://your-exzien-domain.com/v1/drift-check \
+          -H "Authorization: Bearer ${{ secrets.EXZIEN_API_TOKEN }}" \
+          -F "state_file=@terraform.tfstate" \
+          -F "cloud_provider=aws" \
+          -F "project_id=${{ github.repository }}" \
+          -F "env=production")
+        
+        http_code="${response: -3}"
+        body="${response%???}"
+        
+        if [ "$http_code" -ne 200 ]; then
+          echo "❌ Drift check failed: $body"
+          exit 1
+        else
+          echo "✅ Drift check passed: $body"
+        fi
