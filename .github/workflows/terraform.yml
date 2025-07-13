@@ -53,7 +53,9 @@ jobs:
           -F "state_file=@terraform.tfstate" \
           -F "cloud_provider=aws" \
           -F "project_id=${{ github.repository }}" \
-          -F "env=production")
+          -F "env=production" \
+          -F "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" \
+          -F "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}")
         
         http_code="${response: -3}"
         body="${response%???}"
