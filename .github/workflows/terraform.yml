@@ -58,9 +58,24 @@ jobs:
         http_code="${response: -3}"
         body="${response%???}"
         
+        echo "HTTP Status: $http_code"
+        echo "Response: $body"
+        
         if [ "$http_code" -ne 200 ]; then
-          echo "❌ Drift check failed: $body"
+          echo "❌ Drift check failed"
           exit 1
+        fi
+        
+        # Parse response and check for drift
+        drift_detected=$(echo "$body" | jq -r '.drift_detected')
+        drift_count=$(echo "$body" | jq -r '.resource_drift_count')
+        
+        if [ "$drift_detected" = "true" ]; then
+          echo "⚠️  Infrastructure drift detected: $drift_count resources"
+          echo "Scan ID: $(echo "$body" | jq -r '.scan_id')"
+          
+          # Optionally fail the build on drift
+          # exit 1
         else
-          echo "✅ Drift check passed: $body"
+          echo "✅ No infrastructure drift detected"
         fi
