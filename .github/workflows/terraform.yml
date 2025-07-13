@@ -48,7 +48,7 @@ jobs:
     - name: Run Exzien Drift Check
       run: |
         response=$(curl -s -w "%{http_code}" \
-          -X POST https://your-exzien-domain.com/v1/drift-check \
+          -X POST https://your-exzien-domain./v1/drift-check \
           -H "Authorization: Bearer ${{ secrets.EXZIEN_API_TOKEN }}" \
           -F "state_file=@terraform.tfstate" \
           -F "cloud_provider=aws" \
